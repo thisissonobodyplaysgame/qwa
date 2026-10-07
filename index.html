@@ -3738,6 +3738,7 @@
             pageItems.forEach(function(g, i) {
                 const title = (g.title || 'Untitled').toString();
                 const safeTitle = title.replace(/"/g, '&quot;');
+                const jsTitle = title.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const img = g.image || g.logo || '';
                 const catCount = (g.category || []).length;
                 const cats = (g.category || []).slice(0, 3).join(', ') + (catCount > 3 ? ' +' + (catCount - 3) : '');
@@ -3749,7 +3750,7 @@
                     '<div class="game-card" style="animation-delay:' + (i % 12) * 0.02 + 's">' +
                     thumb +
                     '<div class="card-body"><h3>' + safeTitle + '</h3><div class="cats">' + cats + '</div></div>' +
-                    '<button class="play-btn" data-url="' + g.url + '"' + (g.direct ? ' data-direct="1"' : '') + (g.newTab ? ' data-newtab="1"' : '') + ' onmouseover="prewarmGame(\'' + (g.url || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')" onclick="playGame(this)"><i class="fas fa-play"></i> Launch</button>' +
+                    '<button class="play-btn" data-url="' + g.url + '" data-title="' + jsTitle + '"' + (g.direct ? ' data-direct="1"' : '') + (g.newTab ? ' data-newtab="1"' : '') + ' onmouseover="prewarmGame(\'' + (g.url || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')" onclick="playGame(this)"><i class="fas fa-play"></i> Launch</button>' +
                     '</div>';
             });
             grid.innerHTML = html;
@@ -4276,6 +4277,9 @@
 
         // Start on the built-in homepage
         showHome();
+
+        // If the URL ends in a game page (e.g. #/retrobowl), open that game
+        routeGameHash();
     </script>
 </body>
 </html>
