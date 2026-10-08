@@ -3910,28 +3910,21 @@
         })();
 
         // Open a game in a brand-new tab showing ONLY the game — no site chrome.
-        function openGameBare(url, mode, title) {
+        function openGameBare(url, title) {
             url = String(url || '');
             const safeTitle = String(title || url).replace(/</g, '&lt;').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-            let body;
-            if (mode === 'blob') {
-                // Some games block direct iframe embedding, so the game page itself
-                // fetches the HTML and blob-loads it (same trick the site uses).
-                body = '<iframe id="g" style="position:fixed;inset:0;width:100%;height:100%;border:0;"></iframe>' +
-                    '<script>var u=' + JSON.stringify(url) + ';var x=new XMLHttpRequest();x.open("GET",u+(u.indexOf("?")>-1?"&":"?")+"nocache="+new Date().getTime(),true);' +
-                    'x.onreadystatechange=function(){if(x.readyState===4&&x.status===200){var h=x.responseText;' +
-                    'if(!/<base\s/i.test(h)){var b=u.split("#")[0].split("?")[0];if(!/\/$/.test(b)){var q=b.lastIndexOf("/");if(q>7)b=b.slice(0,q+1);}' +
-                    'var tag="<base href=\\""+b+"\\">";h=/<head[^>]*>/i.test(h)?h.replace(/<head[^>]*>/i,function(m){return m+tag;}):tag+h;}' +
-                    'document.getElementById("g").src=URL.createObjectURL(new Blob([h],{type:"text/html"}));}};x.send();<\/script>';
-            } else {
-                body = '<iframe src="' + url.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" allow="autoplay;encrypted-media;gamepad;fullscreen" allowfullscreen></iframe>';
-            }
             const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
                 '<title>' + safeTitle + '</title>' +
                 '<style>html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}</style>' +
-                '</head><body>' + body + '</body></html>';
-            const blob = new Blob([html], { type: 'text/html' });
-            window.open(URL.createObjectURL(blob), '_blank');
+                '</head><body><iframe src="' + url.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" allow="autoplay;encrypted-media;gamepad;fullscreen" allowfullscreen></iframe></body></html>';
+            // A plain about:blank tab, written to directly — no blob:/data: URLs
+            // (Securly blocks blob: content on Chromebooks).
+            const w = window.open('about:blank', '_blank');
+            if (!w) return;
+            const d = w.document;
+            d.open();
+            d.write(html);
+            d.close();
         }
 
         // Turn a raw card URL into the resolved URL + play mode used by openGameBare.
@@ -3961,7 +3954,7 @@
                 return;
             }
             const r = resolveGame(rawUrl, !!btn.getAttribute('data-direct'));
-            openGameBare(r.url, r.mode, title);
+            openGameBare(r.url, title);
         }
 
         // Launch a game. Most game URLs block direct iframe embedding,
